@@ -1,0 +1,33 @@
+# Target directory
+target/
+*.jar
+*.war
+*.ear
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Node modules & build outputs
+node_modules/
+dist/
+build/
+.vite/
+*.log
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Operating system
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment
+.env
+.env.local
