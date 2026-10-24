@@ -1,107 +1,81 @@
 # Air Ambulance Management System
 
-The **Air Ambulance Management System** is a mission-critical full-stack platform designed to facilitate rapid medical evacuation, emergency air transport dispatch, pilot and fleet management, organ transport logistics, and hospital trauma center coordination.
+The **Air Ambulance Management System** is a full-stack application developed using Java, Spring Boot, and MySQL to manage emergency requests, patients, hospitals, and available air ambulances. The system includes functionality for managing emergency bookings and assigning suitable aircraft based on operational requirements and availability. Database operations support the storage and retrieval of application records.
 
----
+## Features
 
-## 🌟 Features & Functional Modules
+### 1. Emergency Booking Management
+- Create and manage emergency transport bookings.
+- Retrieve booking information and booking records.
+- Support air ambulance assignment for emergency requests.
+- Update booking status and support booking cancellation.
 
-### 🔒 1. Authentication & Security
-- **JWT Bearer Token Authentication** with Refresh Token mechanism & Password Hashing via BCrypt.
-- **Role-Based Access Control (RBAC)** supporting 4 distinct roles:
-  - **ADMIN**: Complete system control, fleet management, hospital onboarding, pilot assignments.
-  - **HOSPITAL**: Trauma bed management, organ transport logistics, emergency airlift requests.
-  - **PILOT**: Duty status toggle, flight mission assignments, flight deck logs.
-  - **PATIENT**: Emergency transport booking requests, status tracking, medical profile.
+### 2. Hospital Management
+- Maintain hospital information for emergency coordination.
+- Support hospital-related booking operations.
 
-### 🏥 2. Hospital Module
-- Onboard certified trauma centers & regional hospital helipads.
-- Track total and available ICU bed capacity.
-- Search and filter hospitals by name or city.
+### 3. Patient Management
+- Maintain patient records associated with emergency transport.
+- Support patient-related booking operations.
 
-### 🚁 3. Air Ambulance Fleet Module
-- Register and maintain medical helicopters (e.g. Eurocopter EC135, Bell 429) & fixed-wing jets.
-- Track registration numbers, passenger capacity, current base location, fuel status, availability, and assigned pilots.
+### 4. Air Ambulance Management
+- Maintain air ambulance records.
+- Support the assignment of an air ambulance to an emergency booking.
+- Manage aircraft information and availability as supported by the application.
 
-### 👨‍✈️ 4. Pilot Module
-- Maintain pilot flight licenses, flight experience (years), phone contacts, and duty status (`AVAILABLE`, `ON_MISSION`, `OFF_DUTY`).
-- Direct assignment of pilots to air ambulances.
+### 5. Authentication and Authorization
+- Spring Security-based authentication.
+- JWT authentication filter and token-based request security.
+- BCrypt password encoding.
+- Role-based authorization support.
 
-### 🩺 5. Patient Module
-- Detailed patient records including age, gender, blood group, emergency contacts, and medical condition notes.
+### 6. REST API Documentation
+- API documentation using SpringDoc OpenAPI and Swagger UI.
 
-### 🚨 6. Emergency Booking Dispatch Workflow
-```
-Patient / Dispatcher Requests Transport
-                ↓
-Auto-Assigns Nearest Available Air Ambulance & Pilot
-                ↓
-Notifies Assigned Pilot (Flight Deck)
-                ↓
-Notifies Destination Hospital (Trauma Center)
-                ↓
-Live Booking Status Updates: REQUESTED → ASSIGNED → IN_TRANSIT → COMPLETED
-```
-
-### 🫀 7. Organ Transport Logistics
-- High-priority organ transport logistics (Heart, Liver, Kidneys) between source and recipient hospitals with estimated time of arrival (ETA) tracking.
-
-### 🔔 8. Real-time Notifications Module
-- Automated notification alerts generated upon booking creation, pilot dispatch, takeoff, landing, and organ transport alerts.
-
----
-
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Backend
-- **Java**: 21 / 23
-- **Framework**: Spring Boot 3.3.x
-- **Security**: Spring Security, JWT (io.jsonwebtoken)
-- **Database / ORM**: MySQL 8.0, Spring Data JPA, Hibernate
-- **Validation & Helpers**: Bean Validation (Hibernate Validator), Lombok
-- **API Documentation**: OpenAPI 3.0 / Swagger UI (SpringDoc v2.5.0)
-- **Containerization**: Docker & Docker Compose
+- **Language:** Java 21
+- **Framework:** Spring Boot 3.3.2
+- **Security:** Spring Security and JWT
+- **Persistence:** Spring Data JPA and Hibernate
+- **Database:** H2 for the configured local default; MySQL connector available
+- **API Documentation:** SpringDoc OpenAPI / Swagger UI
+- **Build Tool:** Maven
+- **Utilities:** Lombok and Bean Validation
 
 ### Frontend
-- **Framework**: React 18 + Vite
-- **UI Library**: Material UI (MUI v5)
-- **Styling Theme**: Custom Dark Blue Medical Glassmorphism Theme
-- **Routing**: React Router DOM v6
-- **HTTP Client**: Axios with Interceptors for JWT & Auto-Refresh
-- **State Management**: React Context API (`AuthContext`)
+- **Framework:** React 18
+- **Build Tool:** Vite
+- **UI Library:** Material UI
+- **Routing:** React Router DOM
+- **HTTP Client:** Axios
 
----
+## Project Structure
 
-## 📁 Project Structure
-
-```
+```text
 Air-Ambulance-Management-System/
 ├── backend/
 │   ├── src/main/java/com/airambulance/
-│   │   ├── AirAmbulanceApplication.java
-│   │   ├── config/ (SecurityConfig, JwtUtils, JwtAuthenticationFilter, DataInitializer, OpenApiConfig)
-│   │   ├── controller/ (Auth, Hospital, AirAmbulance, Pilot, Patient, EmergencyBooking, OrganTransport, Notification, Dashboard)
-│   │   ├── dto/ (Requests & Responses)
-│   │   ├── entity/ (User, Role, Hospital, AirAmbulance, Pilot, Patient, EmergencyBooking, OrganTransport, Notification)
-│   │   ├── enums/ (RoleName, AmbulanceStatus, FuelStatus, PilotStatus, BookingStatus, EmergencyLevel, OrganPriority, NotificationType)
-│   │   ├── exception/ (GlobalExceptionHandler, ResourceNotFoundException, BadRequestException)
-│   │   ├── repository/ (JpaRepositories)
-│   │   └── service/ (Services & Implementation classes)
+│   │   ├── config/
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/
+│   │   ├── enums/
+│   │   ├── exception/
+│   │   ├── repository/
+│   │   └── service/
 │   ├── src/main/resources/
 │   │   └── application.properties
 │   ├── pom.xml
 │   └── Dockerfile
 ├── frontend/
 │   ├── src/
-│   │   ├── api/ (Axios Instance & Service layers)
-│   │   ├── components/ (Navbar, Sidebar, Footer, ProtectedRoute, LoadingSpinner, StatCard, StatusChip)
-│   │   ├── context/ (AuthContext)
-│   │   ├── pages/ (Landing, Login, Register, Dashboards, Hospitals, AirAmbulances, Bookings, OrganTransports, Patients, Notifications, Profile)
-│   │   ├── theme/ (Custom Dark Blue Medical Theme)
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── index.html
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── context/
+│   │   ├── pages/
+│   │   └── theme/
 │   ├── package.json
 │   ├── vite.config.js
 │   └── Dockerfile
@@ -109,75 +83,73 @@ Air-Ambulance-Management-System/
 └── README.md
 ```
 
----
+## Prerequisites
 
-## ⚡ Quick Start & Setup Instructions
+- JDK 21
+- Apache Maven
+- Node.js and npm
+- MySQL Server, if using MySQL instead of the configured H2 database
 
-### Pre-requisites
-- JDK 21+ and Apache Maven 3.8+
-- Node.js 18+ and npm
-- MySQL Server 8.0+ running on `localhost:3306` (or Docker)
+## Getting Started
 
----
+### 1. Run the Backend
 
-### 🔑 Pre-seeded Default User Credentials
-
-The application auto-seeds standard roles and test accounts on first launch:
-
-| Role | Email | Password | Details |
-| :--- | :--- | :--- | :--- |
-| **System Admin** | `admin@airambulance.com` | `admin123` | Full Mission Control Access |
-| **Hospital** | `cityhospital@med.org` | `hospital123` | City General Trauma Center |
-| **Pilot** | `captain.john@skyrescue.com` | `pilot123` | Captain John Miller (AV-987654) |
-| **Patient** | `patient.smith@gmail.com` | `patient123` | Robert Smith (Blood O+) |
-
----
-
-### 🚀 Running Backend
-
-1. Ensure MySQL database `air_ambulance_db` is created or allowed to auto-create with root credentials (`root` / `root`).
-2. Navigate to `backend/`:
-   ```bash
-   cd backend
-   ```
-3. Build the project:
-   ```bash
-   mvn clean install
-   ```
-4. Start Spring Boot application:
-   ```bash
-   mvn spring-boot:run
-   ```
-5. Backend service will be available at: `http://localhost:8080`
-6. Swagger UI API Documentation: `http://localhost:8080/swagger-ui.html`
-
----
-
-### 💻 Running Frontend
-
-1. Navigate to `frontend/`:
-   ```bash
-   cd frontend
-   ```
-2. Install npm dependencies:
-   ```bash
-   npm install
-   ```
-3. Launch development server:
-   ```bash
-   npm run dev
-   ```
-4. Open browser at: `http://localhost:3000`
-
----
-
-### 🐳 Running with Docker Compose
-
-To launch the complete application stack (MySQL + Spring Boot + React Frontend):
+From the project root, navigate to the backend directory:
 
 ```bash
-docker-compose up --build
+cd backend
 ```
-- Frontend UI: `http://localhost:3000`
-- Backend API: `http://localhost:8080`
-- MySQL Database: `localhost:3306`
+
+Build the application:
+
+```bash
+mvn clean install
+```
+
+Start the Spring Boot application:
+
+```bash
+mvn spring-boot:run
+```
+
+The backend is configured to run on:
+
+`http://localhost:8080`
+
+Swagger UI is configured at:
+
+`http://localhost:8080/swagger-ui.html`
+
+### 2. Database Configuration
+
+The current `application.properties` configuration uses an in-memory H2 database for local development.
+
+To use MySQL, configure the MySQL datasource URL, username, password, and driver in `application.properties`, and ensure the MySQL server is running.
+
+Do not publish real database passwords or production secrets in the repository.
+
+### 3. Run the Frontend
+
+Open a separate terminal and navigate to the frontend directory:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Vite will display the local frontend URL in the terminal. Use that URL to open the application.
+
+## Project Objective
+
+The objective of this project is to simplify emergency air ambulance management through centralized record handling, emergency booking management, and aircraft assignment based on operational requirements and availability. The project uses Java, Spring Boot, and database operations to support its core functionality.
