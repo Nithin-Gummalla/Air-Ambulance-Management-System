@@ -70,8 +70,8 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
         if (request.getAirAmbulanceId() != null) {
             assignedAmbulance = airAmbulanceRepository.findById(request.getAirAmbulanceId())
                     .orElseThrow(() -> new ResourceNotFoundException("Air Ambulance not found with ID: " + request.getAirAmbulanceId()));
-            if (!isAvailableForAssignment(assignedAmbulance)) {
-                throw new BadRequestException("Selected air ambulance is not available for assignment");
+            if (!isSuitableForEmergency(assignedAmbulance, request.getEmergencyLevel())) {
+                throw new BadRequestException("Selected air ambulance is unavailable or does not meet the fuel and pilot requirements for this emergency level");
             }
             assignedAmbulance.setAvailability(false);
             assignedAmbulance.setStatus(AmbulanceStatus.IN_SERVICE);
@@ -83,7 +83,7 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
             status = BookingStatus.ASSIGNED;
         } else {
             assignedAmbulance = airAmbulanceRepository.findByAvailability(true).stream()
-                    .filter(this::isAvailableForAssignment)
+                    .filter(ambulance -> isSuitableForEmergency(ambulance, request.getEmergencyLevel()))
                     .findFirst()
                     .orElse(null);
             if (assignedAmbulance != null) {
@@ -129,7 +129,18 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
         if (statusRequest.getAirAmbulanceId() != null) {
             AirAmbulance amb = airAmbulanceRepository.findById(statusRequest.getAirAmbulanceId())
                     .orElseThrow(() -> new ResourceNotFoundException("Air Ambulance not found with ID: " + statusRequest.getAirAmbulanceId()));
+            if (!isSuitableForEmergency(amb, booking.getEmergencyLevel())
+                    && (booking.getAirAmbulance() == null || !booking.getAirAmbulance().getId().equals(amb.getId()))) {
+                throw new BadRequestException("Selected air ambulance is unavailable or does not meet the fuel and pilot requirements for this emergency level");
+            }
             booking.setAirAmbulance(amb);
+            amb.setAvailability(false);
+            amb.setStatus(AmbulanceStatus.IN_SERVICE);
+            if (amb.getPilot() != null) {
+                amb.getPilot().setStatus(PilotStatus.ON_MISSION);
+                pilotRepository.save(amb.getPilot());
+            }
+            airAmbulanceRepository.save(amb);
         }
 
         if (newStatus == BookingStatus.COMPLETED || newStatus == BookingStatus.CANCELLED) {
@@ -166,7 +177,7 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
         AirAmbulance amb = airAmbulanceRepository.findById(airAmbulanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Air Ambulance not found with ID: " + airAmbulanceId));
 
-        if (!isAvailableForAssignment(amb)
+        if (!isSuitableForEmergency(amb, booking.getEmergencyLevel())
                 && (booking.getAirAmbulance() == null || !booking.getAirAmbulance().getId().equals(amb.getId()))) {
             throw new BadRequestException("Selected air ambulance is not available for assignment");
         }
@@ -256,10 +267,30 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
         bookingRepository.save(booking);
     }
 
-    private boolean isAvailableForAssignment(AirAmbulance ambulance) {
-        return Boolean.TRUE.equals(ambulance.getAvailability())
-                && ambulance.getStatus() == AmbulanceStatus.AVAILABLE
-                && (ambulance.getPilot() == null || ambulance.getPilot().getStatus() == PilotStatus.AVAILABLE);
+    /**
+     * An aircraft is suitable only when its availability, operational status,
+     * pilot duty status, and fuel level meet the emergency's urgency.
+     * CRITICAL/HIGH requests require HIGH or FULL fuel; MODERATE/LOW requests
+     * require at least MEDIUM fuel.
+     */
+    private boolean isSuitableForEmergency(AirAmbulance ambulance, com.airambulance.enums.EmergencyLevel emergencyLevel) {
+        if (!Boolean.TRUE.equals(ambulance.getAvailability())
+                || ambulance.getStatus() != AmbulanceStatus.AVAILABLE
+                || (ambulance.getPilot() != null && ambulance.getPilot().getStatus() != PilotStatus.AVAILABLE)) {
+            return false;
+        }
+
+        if (ambulance.getFuelStatus() == null || emergencyLevel == null) {
+            return false;
+        }
+
+        return switch (emergencyLevel) {
+            case CRITICAL, HIGH -> ambulance.getFuelStatus() == FuelStatus.FULL
+                    || ambulance.getFuelStatus() == FuelStatus.HIGH;
+            case MODERATE, LOW -> ambulance.getFuelStatus() == FuelStatus.FULL
+                    || ambulance.getFuelStatus() == FuelStatus.HIGH
+                    || ambulance.getFuelStatus() == FuelStatus.MEDIUM;
+        };
     }
 
     private void sendNotificationsForBooking(EmergencyBooking booking) {
