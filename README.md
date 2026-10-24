@@ -116,7 +116,7 @@ Air-Ambulance-Management-System/
 ### Pre-requisites
 - JDK 21+ and Apache Maven 3.8+
 - Node.js 18+ and npm
-- MySQL Server 8.0+ running on `localhost:3306` (or Docker)
+- MySQL Server 8.0+ running on `localhost:3306` (or Docker). The backend defaults to MySQL; configure `DB_URL`, `DB_USERNAME`, and `DB_PASSWORD` if your local settings differ.
 
 ---
 
