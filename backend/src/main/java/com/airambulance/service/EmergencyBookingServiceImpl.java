@@ -70,17 +70,30 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
         if (request.getAirAmbulanceId() != null) {
             assignedAmbulance = airAmbulanceRepository.findById(request.getAirAmbulanceId())
                     .orElseThrow(() -> new ResourceNotFoundException("Air Ambulance not found with ID: " + request.getAirAmbulanceId()));
+            if (!isAvailableForAssignment(assignedAmbulance)) {
+                throw new BadRequestException("Selected air ambulance is not available for assignment");
+            }
             assignedAmbulance.setAvailability(false);
             assignedAmbulance.setStatus(AmbulanceStatus.IN_SERVICE);
             airAmbulanceRepository.save(assignedAmbulance);
+            if (assignedAmbulance.getPilot() != null) {
+                assignedAmbulance.getPilot().setStatus(PilotStatus.ON_MISSION);
+                pilotRepository.save(assignedAmbulance.getPilot());
+            }
             status = BookingStatus.ASSIGNED;
         } else {
-            List<AirAmbulance> available = airAmbulanceRepository.findByAvailability(true);
-            if (!available.isEmpty()) {
-                assignedAmbulance = available.get(0);
+            assignedAmbulance = airAmbulanceRepository.findByAvailability(true).stream()
+                    .filter(this::isAvailableForAssignment)
+                    .findFirst()
+                    .orElse(null);
+            if (assignedAmbulance != null) {
                 assignedAmbulance.setAvailability(false);
                 assignedAmbulance.setStatus(AmbulanceStatus.IN_SERVICE);
                 airAmbulanceRepository.save(assignedAmbulance);
+                if (assignedAmbulance.getPilot() != null) {
+                    assignedAmbulance.getPilot().setStatus(PilotStatus.ON_MISSION);
+                    pilotRepository.save(assignedAmbulance.getPilot());
+                }
                 status = BookingStatus.ASSIGNED;
             }
         }
@@ -152,6 +165,22 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Emergency Booking not found with ID: " + bookingId));
         AirAmbulance amb = airAmbulanceRepository.findById(airAmbulanceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Air Ambulance not found with ID: " + airAmbulanceId));
+
+        if (!isAvailableForAssignment(amb)
+                && (booking.getAirAmbulance() == null || !booking.getAirAmbulance().getId().equals(amb.getId()))) {
+            throw new BadRequestException("Selected air ambulance is not available for assignment");
+        }
+
+        AirAmbulance previousAmbulance = booking.getAirAmbulance();
+        if (previousAmbulance != null && !previousAmbulance.getId().equals(amb.getId())) {
+            previousAmbulance.setAvailability(true);
+            previousAmbulance.setStatus(AmbulanceStatus.AVAILABLE);
+            if (previousAmbulance.getPilot() != null) {
+                previousAmbulance.getPilot().setStatus(PilotStatus.AVAILABLE);
+                pilotRepository.save(previousAmbulance.getPilot());
+            }
+            airAmbulanceRepository.save(previousAmbulance);
+        }
 
         booking.setAirAmbulance(amb);
         booking.setStatus(BookingStatus.ASSIGNED);
@@ -225,6 +254,12 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
             airAmbulanceRepository.save(amb);
         }
         bookingRepository.save(booking);
+    }
+
+    private boolean isAvailableForAssignment(AirAmbulance ambulance) {
+        return Boolean.TRUE.equals(ambulance.getAvailability())
+                && ambulance.getStatus() == AmbulanceStatus.AVAILABLE
+                && (ambulance.getPilot() == null || ambulance.getPilot().getStatus() == PilotStatus.AVAILABLE);
     }
 
     private void sendNotificationsForBooking(EmergencyBooking booking) {
