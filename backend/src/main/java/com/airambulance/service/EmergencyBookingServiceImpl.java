@@ -284,7 +284,8 @@ public class EmergencyBookingServiceImpl implements EmergencyBookingService {
     private boolean isSuitableForEmergency(AirAmbulance ambulance, com.airambulance.enums.EmergencyLevel emergencyLevel) {
         if (!Boolean.TRUE.equals(ambulance.getAvailability())
                 || ambulance.getStatus() != AmbulanceStatus.AVAILABLE
-                || (ambulance.getPilot() != null && ambulance.getPilot().getStatus() != PilotStatus.AVAILABLE)) {
+                || ambulance.getPilot() == null
+                || ambulance.getPilot().getStatus() != PilotStatus.AVAILABLE) {
             return false;
         }
 
