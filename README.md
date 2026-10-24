@@ -34,7 +34,7 @@ The **Air Ambulance Management System** is a mission-critical full-stack platfor
 ```
 Patient / Dispatcher Requests Transport
                 ↓
-Auto-Assigns Nearest Available Air Ambulance & Pilot
+Selects an available air ambulance with sufficient fuel and an available pilot based on emergency urgency
                 ↓
 Notifies Assigned Pilot (Flight Deck)
                 ↓
